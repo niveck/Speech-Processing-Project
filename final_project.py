@@ -8,7 +8,11 @@ import torch.nn as nn
 import torch.optim as optim
 from tqdm import tqdm
 import time
-from transformers import pipeline
+# from transformers import pipeline
+# from langchain.llms import OpenAI
+from langchain_openai import ChatOpenAI
+import numpy as np
+
 
 
 RANDOM_SEED = 42
@@ -19,6 +23,7 @@ DIGITS_ALPHABET = ["e", "f", "g", "h", "i", "n", "o", "r", "s", "t", "u", "v", "
 # /J/ is like 'y', /Y/ is like 'ee', /H/ is like 'th', all others are similar to their English sound
 
 INDEX2LETTER = dict(enumerate([EPSILON] + DIGITS_ALPHABET))  # original, with regular words
+# we are starting the indices from 1 so we can negate them to signify masking the labels
 LETTER2INDEX = {letter: index for index, letter in INDEX2LETTER.items()}
 
 MAX_DIGIT_NAME_LENGTH = max([len(digit_name) for digit_name in DIGITS])  # 5
@@ -29,7 +34,7 @@ SAMPLE_RATE = 16000
 N_MFCC = 13
 BATCH_SIZE = 64
 LEARNING_RATE = 1e-3
-NUM_EPOCHS = 2  # TODO RETURN, this is only for debugging # 20
+NUM_EPOCHS = 20
 CONV_KERNEL_SIZE = 5
 PADDING = 2
 HIDDEN_DIM = 512
@@ -37,18 +42,19 @@ MEL_KWARGS = {"n_fft": 400, "hop_length": 160, "n_mels": 23, "center": False,
               "normalized": False  # True
               }
 
-# TODO make sure paths are to the right dirs
-TRAIN_SET_PATH = "../ex3/data/train"
-VAL_SET_PATH = "../ex3/data/val"
-TEST_SET_PATH = "../ex3/data/test"
+# TRAIN_SET_PATH = "../ex3/data/train"
+TRAIN_SET_PATH = "/cs/snapless/gabis/nive/speech/train"
+# VAL_SET_PATH = "../ex3/data/val"
+VAL_SET_PATH = "/cs/snapless/gabis/nive/speech/val"
+# TEST_SET_PATH = "../ex3/data/test"
+TEST_SET_PATH = "/cs/snapless/gabis/nive/speech/test"
 
 # Training with LLM constants
 TRAIN_DATA_WITHOUT_LLM_PERCENTAGE = 60
 USE_LLM_FOR_LABELS = False
-DONT_USE_LABEL = -1
 DONT_USE_LABELS_RATIO = 2  # once in how many samples we want to ignore label
-NUM_CLEAN_EPOCHS = 1  # TODO RETURN, this is only for debugging # 5  # TODO change
-LLM_NAME = "gpt-j-6B"  # "gpt2"  # TODO maybe replace
+NUM_CLEAN_EPOCHS = 5  # TODO consider playing with this hyperparameter
+LLM_NAME = "gpt-3.5-turbo-0125"  # "gpt-j-6B"  # "gpt2"
 # LLM_PROMPT = "We're training a CTC speech to text model and we decoded the prob matrix to get " \
 #              "the word: '{decoded_output}'. Tell us what do you think the word was. Give us the " \
 #              "answer with one word only (very important to only use one word, because I don't " \
@@ -68,6 +74,7 @@ class DigitDataset(Dataset):
         self.file_names = {digit_name: [] for digit_name in self.digit_names}
         for digit_name in self.digit_names:
             digit_data_dir = os.path.join(root_dir, digit_name)
+            # for file_name in os.listdir(digit_data_dir):
             for file_name in os.listdir(digit_data_dir):
                 if file_name.endswith(".wav"):
                     self.file_names[digit_name].append(os.path.join(digit_data_dir, file_name))
@@ -118,18 +125,24 @@ def labels_to_padded_targets(labels):
 
 
 def decode_output(logits):  # greedily (without beam search)
-    batch_predictions = logits.argmax(dim=-1).t()  # shape: (batch_size, seq_len)
+    batch_predictions = logits.argmax(dim=-1).t()
     decoded_sequences = []
     for sequence in batch_predictions:
-        current_char = None
-        decoded_chars = []
-        for index in sequence:
-            predicted_char = INDEX2LETTER[index.item()]
-            if predicted_char != current_char and predicted_char != EPSILON:
-                decoded_chars.append(predicted_char)
-                current_char = predicted_char
-        decoded_sequences.append("".join(decoded_chars))
+        decoded_sequence = decode_single_sequence(sequence)
+        decoded_sequences.append(decoded_sequence)
     return decoded_sequences
+
+
+def decode_single_sequence(sequence):
+    current_char = None
+    decoded_chars = []
+    for index in sequence:
+        predicted_char = INDEX2LETTER[index.item()]
+        if predicted_char != current_char and predicted_char != EPSILON:
+            decoded_chars.append(predicted_char)
+            current_char = predicted_char
+    decoded_sequence = "".join(decoded_chars)
+    return decoded_sequence
 
 
 def evaluate_model_performance(ctc_model, data_loader, device):
@@ -218,15 +231,20 @@ class CTCWithLLM(nn.CTCLoss):
 
     def __init__(self, blank):
         super().__init__(blank)
-        self.pipeline = pipeline("text-generation", model=LLM_NAME)
+        # self.pipeline = pipeline("text-generation", model=LLM_NAME)
+        self.llm = ChatOpenAI(model_name=LLM_NAME)
         self.num_failed_attempts = 0
+        self.llm_performance_logs_path = f"/cs/snapless/gabis/nive/speech/Speech-Processing-Project/llm_performance_logs_{time.strftime('%H_%M_%S')}.txt"
+        with open(self.llm_performance_logs_path, "w") as f:
+            f.write("Decoded CTC model's output,\tLLM Predicted Label,\tOriginal True Label,\tAre they the same\n")
 
-    def get_targets_by_llm(self, logits: torch.Tensor):
-        decoded_output = decode_output(logits.unsqueeze(0))
+    def get_targets_by_llm(self, logits: torch.Tensor, target: torch.Tensor):
+        decoded_output = decode_output(logits.unsqueeze(1))[0]
         # Create the prompt for the LLM
         input_text = LLM_PROMPT.format(decoded_output=decoded_output)
         # Use the pipeline to generate a response from the LLM
-        response = self.pipeline(input_text, max_length=50, num_return_sequences=1)[0]['generated_text']
+        # response = self.pipeline(input_text, max_length=50, num_return_sequences=1)[0]['generated_text']
+        response = self.llm(input_text).content
         label = None
         for digit_name in DIGITS:
             if digit_name in response:
@@ -235,19 +253,28 @@ class CTCWithLLM(nn.CTCLoss):
         if label is None:
             label = random.choice(DIGITS)
             self.num_failed_attempts += 1
+        decoded_true_label = decode_single_sequence(target * (-1))
+        with open(self.llm_performance_logs_path, "a") as f:
+            f.write(f"{decoded_output},\t{response},\t{decoded_true_label},\t{response.strip() == decoded_true_label}\n")
         return labels_to_padded_targets([label])
 
     def forward(self, log_probs: torch.Tensor, targets: torch.Tensor,
                 input_lengths: torch.Tensor, target_lengths: torch.Tensor) -> torch.Tensor:
         for i, target in enumerate(targets):
-            if (target == DONT_USE_LABEL).any():
-                targets[i] = self.get_targets_by_llm(log_probs[i])  # TODO valudate while debugging that it's ok dimensions-wise
+            if (target < 0).any():
+                targets[i] = self.get_targets_by_llm(log_probs[:, i, :], target)
         return super().forward(log_probs, targets, input_lengths, target_lengths)
 
 
 def main():
 
+    # all kinds of random seeds
     random.seed(RANDOM_SEED)
+    np.random.seed(RANDOM_SEED)
+    torch.manual_seed(RANDOM_SEED)  # when using a GPU, set the seed for all GPU operations
+    torch.cuda.manual_seed(RANDOM_SEED)
+    torch.cuda.manual_seed_all(RANDOM_SEED)  # when using multiple GPUs
+
 
     # create and load datasets
     print("Started running at", time.strftime("%H:%M:%S"))
@@ -275,9 +302,9 @@ def main():
         model.train()
         aggregated_loss = 0
         for mfccs, labels, input_lengths, target_lengths in train_loader:
-            labels[::DONT_USE_LABELS_RATIO] = DONT_USE_LABEL
+            labels[::DONT_USE_LABELS_RATIO] *= -1
             if epoch < NUM_CLEAN_EPOCHS:
-                samples_to_keep = (labels != DONT_USE_LABEL)[:, 0]
+                samples_to_keep = (labels > 0)[:, 0]
                 mfccs = mfccs[samples_to_keep]
                 labels = labels[samples_to_keep]
                 input_lengths = input_lengths[samples_to_keep]
@@ -308,11 +335,14 @@ def main():
     final_accuracy, final_exact_match_accuracy = evaluate_model_performance(model, test_loader, device)
     final_status = (f"Finished training at {time.strftime('%H:%M:%S')}\n"
                     f"Final accuracy: {final_accuracy}\n"
-                    f"Final exact-match accuracy: {final_exact_match_accuracy}")
+                    f"Final exact-match accuracy: {final_exact_match_accuracy}\n"
+                    f"LLM performance logs path: {criterion.llm_performance_logs_path}")
     print(final_status)
     logs += final_status
-    with open(f"output_logs_{time.strftime('%H_%M_%S')}.txt", "w") as f:
+    logs_output_path = f"/cs/snapless/gabis/nive/speech/Speech-Processing-Project/output_logs_{time.strftime('%H_%M_%S')}.txt"
+    with open(logs_output_path, "w") as f:
         f.write(logs)
+    print(f"Full logs were saved to {logs_output_path}")
 
 
 if __name__ == '__main__':
