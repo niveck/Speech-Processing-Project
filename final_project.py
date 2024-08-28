@@ -17,14 +17,8 @@ EPSILON = "_"
 DIGITS = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero"]
 DIGITS_ALPHABET = ["e", "f", "g", "h", "i", "n", "o", "r", "s", "t", "u", "v", "w", "x", "z"]
 # /J/ is like 'y', /Y/ is like 'ee', /H/ is like 'th', all others are similar to their English sound
-DIGITS_AS_PHONEMES = ["WAN", "TU", "HRY", "FOR", "FAJV", "SIKS", "SEVEN", "EJT", "NAJN", "ZYRO"]
-PHONEMES_ALPHABET = ["A", "E", "F", "H", "I", "J", "K", "N", "O",
-                     "R", "S", "T", "U", "V", "W", "Y", "Z"]
-DIGITS2PHONEMES = {"one": "WAN", "two": "TU", "three": "HRY", "four": "FOR", "five": "FAJV",
-                   "six": "SIKS", "seven": "SEVEN", "eight": "EJT", "nine": "NAJN", "zero": "ZYRO"}
 
-# INDEX2LETTER = dict(enumerate([EPSILON] + DIGITS_ALPHABET))  # original, with regular words
-INDEX2LETTER = dict(enumerate([EPSILON] + PHONEMES_ALPHABET))
+INDEX2LETTER = dict(enumerate([EPSILON] + DIGITS_ALPHABET))  # original, with regular words
 LETTER2INDEX = {letter: index for index, letter in INDEX2LETTER.items()}
 
 MAX_DIGIT_NAME_LENGTH = max([len(digit_name) for digit_name in DIGITS])  # 5
@@ -35,7 +29,7 @@ SAMPLE_RATE = 16000
 N_MFCC = 13
 BATCH_SIZE = 64
 LEARNING_RATE = 1e-3
-NUM_EPOCHS = 20
+NUM_EPOCHS = 2  # TODO RETURN, this is only for debugging # 20
 CONV_KERNEL_SIZE = 5
 PADDING = 2
 HIDDEN_DIM = 512
@@ -43,14 +37,27 @@ MEL_KWARGS = {"n_fft": 400, "hop_length": 160, "n_mels": 23, "center": False,
               "normalized": False  # True
               }
 
-TRAIN_SET_PATH = "train"
-VAL_SET_PATH = "val"
-TEST_SET_PATH = "test"
+# TODO make sure paths are to the right dirs
+TRAIN_SET_PATH = "../ex3/data/train"
+VAL_SET_PATH = "../ex3/data/val"
+TEST_SET_PATH = "../ex3/data/test"
 
 # Training with LLM constants
 TRAIN_DATA_WITHOUT_LLM_PERCENTAGE = 60
 USE_LLM_FOR_LABELS = False
 DONT_USE_LABEL = -1
+DONT_USE_LABELS_RATIO = 2  # once in how many samples we want to ignore label
+NUM_CLEAN_EPOCHS = 1  # TODO RETURN, this is only for debugging # 5  # TODO change
+LLM_NAME = "gpt-j-6B"  # "gpt2"  # TODO maybe replace
+# LLM_PROMPT = "We're training a CTC speech to text model and we decoded the prob matrix to get " \
+#              "the word: '{decoded_output}'. Tell us what do you think the word was. Give us the " \
+#              "answer with one word only (very important to only use one word, because I don't " \
+#              "want your answer to be more than one word): "  # REMEMBER to use {decoded_output}
+LLM_PROMPT = "My Speech-to-Text model is in the middle of training, and predicted the following" \
+             " text for a recording of a digit name: '{decoded_output}'. Which digit name is the " \
+             "most likely the true label of this recording? Reply with only one word out of the " \
+             "following: zero, one, two, three, four, five, six, seven, eight, nine (remember " \
+             "to only output one word out of them)."
 
 
 class DigitDataset(Dataset):
@@ -69,14 +76,16 @@ class DigitDataset(Dataset):
         self.to_mfcc = transforms.MFCC(sample_rate=SAMPLE_RATE, n_mfcc=N_MFCC, melkwargs=MEL_KWARGS)
 
     def __len__(self):
-        return sum([len(audio_files) for audio_files in self.file_names.values()])
+        return sum([len(audio_files) for digit, audio_files in self.file_names.items()])
 
     def __getitem__(self, unused_index):
-        digit = random.choice(self.digit_names)
-        label = DIGITS2PHONEMES[digit]  # original was w/o DIGITS2PHONEMES
-        wav, _ = ta.load(random.choice(self.file_names[digit]))
-        mfcc = self.to_mfcc(wav).transpose(0, 1)  # time dim should be first
-        return mfcc, label
+        sampled_digits = random.sample(self.digit_names, 1)
+        label_str = "".join([digit for digit in sampled_digits])  # original was w/o DIGITS2PHONEMES
+        waveform = torch.cat([ta.load(random.choice(self.file_names[digit]))[0]
+                              for digit in sampled_digits], dim=1)
+        mfcc = self.to_mfcc(waveform)
+        mfcc = torch.mean(mfcc, dim=0).transpose(0, 1)  # (time, mfcc_coefficients)
+        return mfcc, label_str
 
     def get_max_time_steps(self):
         max_time_steps = 0
@@ -143,8 +152,7 @@ def evaluate_model_performance(ctc_model, data_loader, device):
                 lowest_loss = torch.inf
                 best_prediction = None
                 for digit in data_loader.dataset.digit_names:
-                    class_label = DIGITS2PHONEMES[digit]  # original was just `digit`
-                    class_indices = torch.tensor([LETTER2INDEX[char] for char in class_label],
+                    class_indices = torch.tensor([LETTER2INDEX[char] for char in digit],
                                                  dtype=torch.long).to(device)
                     class_length = torch.tensor([len(class_indices)], dtype=torch.long).to(device)
                     class_specific_loss = ctc_loss(predicted_logit.unsqueeze(1),
@@ -152,7 +160,7 @@ def evaluate_model_performance(ctc_model, data_loader, device):
                                                    input_lengths[i:i + 1], class_length)
                     if class_specific_loss < lowest_loss:
                         lowest_loss = class_specific_loss
-                        best_prediction = class_label
+                        best_prediction = digit
 
                 decoded_label = "".join([INDEX2LETTER[index.item()] for index in label
                                          if index.item() != LETTER2INDEX[EPSILON]])
@@ -207,17 +215,16 @@ def build_datasets():
 
 
 class CTCWithLLM(nn.CTCLoss):
-    """
-    TODO add description
-    """
+
     def __init__(self, blank):
         super().__init__(blank)
-        self.pipeline = pipeline("text-generation", model="gpt2")  # TODO make model name into a const and maybe replace
+        self.pipeline = pipeline("text-generation", model=LLM_NAME)
+        self.num_failed_attempts = 0
 
     def get_targets_by_llm(self, logits: torch.Tensor):
         decoded_output = decode_output(logits.unsqueeze(0))
         # Create the prompt for the LLM
-        input_text = f"We're training a CTC speech to text model and we decoded the prob matrix to get the word: '{decoded_output}'. Tell us what do you think the word was. Give us the answer with one word only (very important to only use one word, because I don't want your answer to be more than one word): "
+        input_text = LLM_PROMPT.format(decoded_output=decoded_output)
         # Use the pipeline to generate a response from the LLM
         response = self.pipeline(input_text, max_length=50, num_return_sequences=1)[0]['generated_text']
         label = None
@@ -227,13 +234,13 @@ class CTCWithLLM(nn.CTCLoss):
                 break
         if label is None:
             label = random.choice(DIGITS)
-            # TODO add a logging method to register that our LLM failed to give us a label
+            self.num_failed_attempts += 1
         return labels_to_padded_targets([label])
 
     def forward(self, log_probs: torch.Tensor, targets: torch.Tensor,
                 input_lengths: torch.Tensor, target_lengths: torch.Tensor) -> torch.Tensor:
         for i, target in enumerate(targets):
-            if target == DONT_USE_LABEL:
+            if (target == DONT_USE_LABEL).any():
                 targets[i] = self.get_targets_by_llm(log_probs[i])  # TODO valudate while debugging that it's ok dimensions-wise
         return super().forward(log_probs, targets, input_lengths, target_lengths)
 
@@ -255,17 +262,12 @@ def main():
     print("Model initiated.")
 
     logs = f""" {time.strftime("%H:%M:%S")}
-    Normalized - False
-    activation - LeakyRelu
-    optimizer - AdamW
-    SAMPLE_RATE = {SAMPLE_RATE}
-    N_MFCC = {N_MFCC}
-    BATCH_SIZE = {BATCH_SIZE}
-    LEARNING_RATE = {LEARNING_RATE}
-    NUM_EPOCHS = {NUM_EPOCHS}  
-    CONV_KERNEL_SIZE = {CONV_KERNEL_SIZE}
-    PADDING = {PADDING}
-    HIDDEN_DIM = {HIDDEN_DIM}\n
+    NUM_EPOCHS = {NUM_EPOCHS}
+    NUM_CLEAN_EPOCHS = {NUM_CLEAN_EPOCHS}
+    DONT_USE_LABELS_RATIO = {DONT_USE_LABELS_RATIO}
+    LLM_NAME = "{LLM_NAME}"
+    LLM_PROMPT = "{LLM_PROMPT}"
+    \n
     """
     # training
     print("Starts training...")
@@ -273,9 +275,13 @@ def main():
         model.train()
         aggregated_loss = 0
         for mfccs, labels, input_lengths, target_lengths in train_loader:
-            dont_use_labels = torch.tensor([i % DONT_USE_LABELS_RATIO == 0 for i in range(len(labels))], dtype=torch.bool)
-            if epoch >= NUM_CLEAN_EPOCHS:
-                labels[dont_use_labels] = DONT_USE_LABEL
+            labels[::DONT_USE_LABELS_RATIO] = DONT_USE_LABEL
+            if epoch < NUM_CLEAN_EPOCHS:
+                samples_to_keep = (labels != DONT_USE_LABEL)[:, 0]
+                mfccs = mfccs[samples_to_keep]
+                labels = labels[samples_to_keep]
+                input_lengths = input_lengths[samples_to_keep]
+                target_lengths = target_lengths[samples_to_keep]
             mfccs = mfccs.to(device)
             labels = labels.to(device)
             optimizer.zero_grad()
@@ -291,6 +297,10 @@ def main():
                   f"Mean CTC loss: {aggregated_loss / len(train_loader)}\n"
                   f"Accuracy over validation set: {accuracy}\n"
                   f"Exact-match accuracy over validation set: {exact_match_accuracy}\n")
+        if epoch >= NUM_CLEAN_EPOCHS:
+            status += f"Rate of failed LLM attempts: (random choice instead) " \
+                      f"{criterion.num_failed_attempts / len(train_loader.dataset)}\n"
+            criterion.num_failed_attempts = 0
         print(status)
         logs += status
 
