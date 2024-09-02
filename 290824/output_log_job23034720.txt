@@ -1,0 +1,4 @@
+Started running at 14:50:25
+Datasets loaded successfully at 14:50:28
+Model initiated.
+Starts training...

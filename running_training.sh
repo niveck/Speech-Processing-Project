@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --mem=32gb
 #SBATCH -c2
-#SBATCH --time=23:0:0
+#SBATCH --time=3-0:0:0
 #SBATCH --gres=gpu:1,vmem:32g
 #SBATCH --error=error_log_job%A.txt
 #SBATCH --output=output_log_job%A.txt

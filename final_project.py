@@ -20,7 +20,6 @@ RANDOM_SEED = 42
 EPSILON = "_"
 DIGITS = ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "zero"]
 DIGITS_ALPHABET = ["e", "f", "g", "h", "i", "n", "o", "r", "s", "t", "u", "v", "w", "x", "z"]
-# /J/ is like 'y', /Y/ is like 'ee', /H/ is like 'th', all others are similar to their English sound
 
 INDEX2LETTER = dict(enumerate([EPSILON] + DIGITS_ALPHABET))  # original, with regular words
 # we are starting the indices from 1 so we can negate them to signify masking the labels
@@ -265,6 +264,10 @@ class CTCWithLLM(nn.CTCLoss):
                 targets[i] = self.get_targets_by_llm(log_probs[:, i, :], target)
         return super().forward(log_probs, targets, input_lengths, target_lengths)
 
+    def log_epoch_number(self, epoch_number):
+        with open(self.llm_performance_logs_path, "a") as f:
+            f.write(f"Epoch: {epoch_number}\n")
+
 
 def main():
 
@@ -277,16 +280,16 @@ def main():
 
 
     # create and load datasets
-    print("Started running at", time.strftime("%H:%M:%S"))
+    print("Started running at", time.strftime("%H:%M:%S"), flush=True)
     train_loader, val_loader, test_loader = build_datasets()
-    print("Datasets loaded successfully at", time.strftime("%H:%M:%S"))
+    print("Datasets loaded successfully at", time.strftime("%H:%M:%S"), flush=True)
 
     # init model and its auxiliary tools
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = CTCModel(hidden_dim=HIDDEN_DIM, mfcc_dim=N_MFCC, output_dim=len(LETTER2INDEX)).to(device)
     criterion = CTCWithLLM(blank=LETTER2INDEX[EPSILON])
     optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE)
-    print("Model initiated.")
+    print("Model initiated.", flush=True)
 
     logs = f""" {time.strftime("%H:%M:%S")}
     NUM_EPOCHS = {NUM_EPOCHS}
@@ -297,8 +300,10 @@ def main():
     \n
     """
     # training
-    print("Starts training...")
+    print("Starts training at", time.strftime("%H:%M:%S"), flush=True)
     for epoch in tqdm(range(NUM_EPOCHS)):
+        print(f"Starts epoch #{epoch + 1} at", time.strftime("%H:%M:%S"), flush=True)
+        criterion.log_epoch_number(epoch + 1)
         model.train()
         aggregated_loss = 0
         for mfccs, labels, input_lengths, target_lengths in train_loader:
@@ -319,30 +324,32 @@ def main():
             aggregated_loss += loss.item()
 
         # validating
-        accuracy, exact_match_accuracy = evaluate_model_performance(model, val_loader, device)
-        status = (f"Finished Epoch {epoch + 1} out of {NUM_EPOCHS}\n"
-                  f"Mean CTC loss: {aggregated_loss / len(train_loader)}\n"
-                  f"Accuracy over validation set: {accuracy}\n"
-                  f"Exact-match accuracy over validation set: {exact_match_accuracy}\n")
-        if epoch >= NUM_CLEAN_EPOCHS:
-            status += f"Rate of failed LLM attempts: (random choice instead) " \
-                      f"{criterion.num_failed_attempts / len(train_loader.dataset)}\n"
-            criterion.num_failed_attempts = 0
-        print(status)
-        logs += status
+        with torch.inference_mode():
+            accuracy, exact_match_accuracy = evaluate_model_performance(model, val_loader, device)
+            status = (f"Finished Epoch {epoch + 1} out of {NUM_EPOCHS}\n"
+                      f"Mean CTC loss: {aggregated_loss / len(train_loader)}\n"
+                      f"Accuracy over validation set: {accuracy}\n"
+                      f"Exact-match accuracy over validation set: {exact_match_accuracy}\n")
+            if epoch >= NUM_CLEAN_EPOCHS:
+                status += f"Rate of failed LLM attempts: (random choice instead) " \
+                          f"{criterion.num_failed_attempts / len(train_loader.dataset)}\n"
+                criterion.num_failed_attempts = 0
+            print(status, flush=True)
+            logs += status
 
     # testing
-    final_accuracy, final_exact_match_accuracy = evaluate_model_performance(model, test_loader, device)
-    final_status = (f"Finished training at {time.strftime('%H:%M:%S')}\n"
-                    f"Final accuracy: {final_accuracy}\n"
-                    f"Final exact-match accuracy: {final_exact_match_accuracy}\n"
-                    f"LLM performance logs path: {criterion.llm_performance_logs_path}")
-    print(final_status)
-    logs += final_status
-    logs_output_path = f"/cs/snapless/gabis/nive/speech/Speech-Processing-Project/output_logs_{time.strftime('%H_%M_%S')}.txt"
-    with open(logs_output_path, "w") as f:
-        f.write(logs)
-    print(f"Full logs were saved to {logs_output_path}")
+    with torch.inference_mode():
+        final_accuracy, final_exact_match_accuracy = evaluate_model_performance(model, test_loader, device)
+        final_status = (f"Finished training at {time.strftime('%H:%M:%S')}\n"
+                        f"Final accuracy: {final_accuracy}\n"
+                        f"Final exact-match accuracy: {final_exact_match_accuracy}\n"
+                        f"LLM performance logs path: {criterion.llm_performance_logs_path}")
+        print(final_status)
+        logs += final_status
+        logs_output_path = f"/cs/snapless/gabis/nive/speech/Speech-Processing-Project/output_logs_{time.strftime('%H_%M_%S')}.txt"
+        with open(logs_output_path, "w") as f:
+            f.write(logs)
+        print(f"Full logs were saved to {logs_output_path}", flush=True)
 
 
 if __name__ == '__main__':
