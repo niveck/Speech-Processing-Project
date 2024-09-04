@@ -40,6 +40,8 @@ HIDDEN_DIM = 512
 MEL_KWARGS = {"n_fft": 400, "hop_length": 160, "n_mels": 23, "center": False,
               "normalized": False  # True
               }
+CHECKPOINT_INTERVAL = 3
+LOGS_DIR = "040924"
 
 # TRAIN_SET_PATH = "../ex3/data/train"
 TRAIN_SET_PATH = "/cs/snapless/gabis/nive/speech/train"
@@ -141,7 +143,7 @@ def decode_single_sequence(sequence):
             decoded_chars.append(predicted_char)
             current_char = predicted_char
     decoded_sequence = "".join(decoded_chars)
-    return decoded_sequence
+    return decoded_sequence if decoded_sequence != "thre" else "three"
 
 
 def evaluate_model_performance(ctc_model, data_loader, device):
@@ -233,7 +235,7 @@ class CTCWithLLM(nn.CTCLoss):
         # self.pipeline = pipeline("text-generation", model=LLM_NAME)
         self.llm = ChatOpenAI(model_name=LLM_NAME)
         self.num_failed_attempts = 0
-        self.llm_performance_logs_path = f"/cs/snapless/gabis/nive/speech/Speech-Processing-Project/llm_performance_logs_{time.strftime('%H_%M_%S')}.txt"
+        self.llm_performance_logs_path = f"/cs/snapless/gabis/nive/speech/Speech-Processing-Project/{LOGS_DIR}/llm_performance_logs_{time.strftime('%H_%M_%S')}.txt"
         with open(self.llm_performance_logs_path, "w") as f:
             f.write("Decoded CTC model's output,\tLLM Predicted Label,\tOriginal True Label,\tAre they the same\n")
 
@@ -243,10 +245,17 @@ class CTCWithLLM(nn.CTCLoss):
         input_text = LLM_PROMPT.format(decoded_output=decoded_output)
         # Use the pipeline to generate a response from the LLM
         # response = self.pipeline(input_text, max_length=50, num_return_sequences=1)[0]['generated_text']
-        response = self.llm(input_text).content
+        try:
+            response = self.llm(input_text).content.lower().strip()
+        except Exception:
+            time.sleep(5)
+            try:
+                response = self.llm(input_text).content.lower().strip()
+            except Exception:
+                response = "Langchain Error"
         label = None
         for digit_name in DIGITS:
-            if digit_name in response:
+            if digit_name in response or response in digit_name:
                 label = digit_name
                 break
         if label is None:
@@ -254,7 +263,7 @@ class CTCWithLLM(nn.CTCLoss):
             self.num_failed_attempts += 1
         decoded_true_label = decode_single_sequence(target * (-1))
         with open(self.llm_performance_logs_path, "a") as f:
-            f.write(f"{decoded_output},\t{response},\t{decoded_true_label},\t{response.strip() == decoded_true_label}\n")
+            f.write(f"{decoded_output},\t{response},\t{decoded_true_label},\t{response == decoded_true_label}\n")
         return labels_to_padded_targets([label])
 
     def forward(self, log_probs: torch.Tensor, targets: torch.Tensor,
@@ -323,6 +332,15 @@ def main():
             optimizer.step()
             aggregated_loss += loss.item()
 
+        # saving checkpoint in case of a crash in the code:
+        if epoch % CHECKPOINT_INTERVAL == CHECKPOINT_INTERVAL - 1 or epoch == NUM_EPOCHS - 1:
+            checkpoint = {
+                "epoch": epoch,
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+            }
+            torch.save(checkpoint, f"checkpoint_epoch_{epoch + 1}.pth.tar")
+
         # validating
         with torch.inference_mode():
             accuracy, exact_match_accuracy = evaluate_model_performance(model, val_loader, device)
@@ -346,7 +364,7 @@ def main():
                         f"LLM performance logs path: {criterion.llm_performance_logs_path}")
         print(final_status)
         logs += final_status
-        logs_output_path = f"/cs/snapless/gabis/nive/speech/Speech-Processing-Project/output_logs_{time.strftime('%H_%M_%S')}.txt"
+        logs_output_path = f"/cs/snapless/gabis/nive/speech/Speech-Processing-Project/{LOGS_DIR}/output_logs_{time.strftime('%H_%M_%S')}.txt"
         with open(logs_output_path, "w") as f:
             f.write(logs)
         print(f"Full logs were saved to {logs_output_path}", flush=True)
