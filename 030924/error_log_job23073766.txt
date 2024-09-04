@@ -1,0 +1,165 @@
+  0%|          | 0/20 [00:00<?, ?it/s]  5%|▌         | 1/20 [03:27<1:05:34, 207.10s/it] 10%|█         | 2/20 [04:33<37:17, 124.32s/it]   15%|█▌        | 3/20 [05:12<24:08, 85.22s/it]  20%|██        | 4/20 [05:44<17:11, 64.48s/it] 25%|██▌       | 5/20 [06:07<12:22, 49.51s/it]/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/langchain_core/_api/deprecation.py:151: LangChainDeprecationWarning: The method `BaseChatModel.__call__` was deprecated in langchain-core 0.1.7 and will be removed in 1.0. Use invoke instead.
+  warn_deprecated(
+ 30%|███       | 6/20 [1:03:53<4:42:35, 1211.08s/it] 35%|███▌      | 7/20 [6:49:15<27:24:22, 7589.46s/it] 35%|███▌      | 7/20 [12:26:37<23:06:35, 6399.69s/it]
+Traceback (most recent call last):
+  File "/cs/snapless/gabis/nive/speech/Speech-Processing-Project/final_project.py", line 358, in <module>
+    main()
+  File "/cs/snapless/gabis/nive/speech/Speech-Processing-Project/final_project.py", line 323, in main
+    loss = criterion(outputs, labels, input_lengths, target_lengths)
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/cs/snapless/gabis/nive/speech/Speech-Processing-Project/final_project.py", line 266, in forward
+    targets[i] = self.get_targets_by_llm(log_probs[:, i, :], target)
+  File "/cs/snapless/gabis/nive/speech/Speech-Processing-Project/final_project.py", line 248, in get_targets_by_llm
+    response = self.llm(input_text).content
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/langchain_core/_api/deprecation.py", line 180, in warning_emitting_wrapper
+    return wrapped(*args, **kwargs)
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/langchain_core/language_models/chat_models.py", line 1015, in __call__
+    generation = self.generate(
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/langchain_core/language_models/chat_models.py", line 633, in generate
+    raise e
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/langchain_core/language_models/chat_models.py", line 623, in generate
+    self._generate_with_cache(
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/langchain_core/language_models/chat_models.py", line 845, in _generate_with_cache
+    result = self._generate(
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/langchain_openai/chat_models/base.py", line 658, in _generate
+    response = self.client.create(**payload)
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/openai/_utils/_utils.py", line 274, in wrapper
+    return func(*args, **kwargs)
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/openai/resources/chat/completions.py", line 668, in create
+    return self._post(
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/openai/_base_client.py", line 1260, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/openai/_base_client.py", line 937, in request
+    return self._request(
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/openai/_base_client.py", line 1026, in _request
+    return self._retry_request(
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/openai/_base_client.py", line 1075, in _retry_request
+    return self._request(
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/openai/_base_client.py", line 1026, in _request
+    return self._retry_request(
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/openai/_base_client.py", line 1075, in _retry_request
+    return self._request(
+  File "/cs/snapless/gabis/nive/venvs/async_env/lib/python3.9/site-packages/openai/_base_client.py", line 1041, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.InternalServerError: <!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en-US"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en-US"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en-US"> <!--<![endif]-->
+<head>
+
+
+<title>api.openai.com | 502: Bad gateway</title>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" id="cf_styles-css" href="/cdn-cgi/styles/main.css" />
+
+
+</head>
+<body>
+<div id="cf-wrapper">
+    <div id="cf-error-details" class="p-0">
+        <header class="mx-auto pt-10 lg:pt-6 lg:px-8 w-240 lg:w-full mb-8">
+            <h1 class="inline-block sm:block sm:mb-2 font-light text-60 lg:text-4xl text-black-dark leading-tight mr-2">
+              <span class="inline-block">Bad gateway</span>
+              <span class="code-label">Error code 502</span>
+            </h1>
+            <div>
+               Visit <a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&utm_campaign=api.openai.com" target="_blank" rel="noopener noreferrer">cloudflare.com</a> for more information.
+            </div>
+            <div class="mt-3">2024-09-03 21:16:59 UTC</div>
+        </header>
+        <div class="my-8 bg-gradient-gray">
+            <div class="w-240 lg:w-full mx-auto">
+                <div class="clearfix md:px-8">
+                  
+<div id="cf-browser-status" class=" relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center">
+  <div class="relative mb-10 md:m-0">
+    
+    <span class="cf-icon-browser block md:hidden h-20 bg-center bg-no-repeat"></span>
+    <span class="cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"></span>
+    
+  </div>
+  <span class="md:block w-full truncate">You</span>
+  <h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3">
+    
+    Browser
+    
+  </h3>
+  <span class="leading-1.3 text-2xl text-green-success">Working</span>
+</div>
+
+<div id="cf-cloudflare-status" class=" relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center">
+  <div class="relative mb-10 md:m-0">
+    <a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&utm_campaign=api.openai.com" target="_blank" rel="noopener noreferrer">
+    <span class="cf-icon-cloud block md:hidden h-20 bg-center bg-no-repeat"></span>
+    <span class="cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"></span>
+    </a>
+  </div>
+  <span class="md:block w-full truncate">Marseille</span>
+  <h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3">
+    <a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&utm_campaign=api.openai.com" target="_blank" rel="noopener noreferrer">
+    Cloudflare
+    </a>
+  </h3>
+  <span class="leading-1.3 text-2xl text-green-success">Working</span>
+</div>
+
+<div id="cf-host-status" class="cf-error-source relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center">
+  <div class="relative mb-10 md:m-0">
+    
+    <span class="cf-icon-server block md:hidden h-20 bg-center bg-no-repeat"></span>
+    <span class="cf-icon-error w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"></span>
+    
+  </div>
+  <span class="md:block w-full truncate">api.openai.com</span>
+  <h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3">
+    
+    Host
+    
+  </h3>
+  <span class="leading-1.3 text-2xl text-red-error">Error</span>
+</div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="w-240 lg:w-full mx-auto mb-8 lg:px-8">
+            <div class="clearfix">
+                <div class="w-1/2 md:w-full float-left pr-6 md:pb-10 md:pr-0 leading-relaxed">
+                    <h2 class="text-3xl font-normal leading-1.3 mb-4">What happened?</h2>
+                    <p>The web server reported a bad gateway error.</p>
+                </div>
+                <div class="w-1/2 md:w-full float-left leading-relaxed">
+                    <h2 class="text-3xl font-normal leading-1.3 mb-4">What can I do?</h2>
+                    <p class="mb-6">Please try again in a few minutes.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="cf-error-footer cf-wrapper w-240 lg:w-full py-10 sm:py-4 sm:px-8 mx-auto text-center sm:text-left border-solid border-0 border-t border-gray-300">
+  <p class="text-13">
+    <span class="cf-footer-item sm:block sm:mb-1">Cloudflare Ray ID: <strong class="font-semibold">8bd8b9fb5d61077f</strong></span>
+    <span class="cf-footer-separator sm:hidden">&bull;</span>
+    <span id="cf-footer-item-ip" class="cf-footer-item hidden sm:block sm:mb-1">
+      Your IP:
+      <button type="button" id="cf-footer-ip-reveal" class="cf-footer-ip-reveal-btn">Click to reveal</button>
+      <span class="hidden" id="cf-footer-ip">132.65.129.127</span>
+      <span class="cf-footer-separator sm:hidden">&bull;</span>
+    </span>
+    <span class="cf-footer-item sm:block sm:mb-1"><span>Performance &amp; security by</span> <a rel="noopener noreferrer" href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&utm_campaign=api.openai.com" id="brand_link" target="_blank">Cloudflare</a></span>
+    
+  </p>
+  <script>(function(){function d(){var b=a.getElementById("cf-footer-item-ip"),c=a.getElementById("cf-footer-ip-reveal");b&&"classList"in b&&(b.classList.remove("hidden"),c.addEventListener("click",function(){c.classList.add("hidden");a.getElementById("cf-footer-ip").classList.remove("hidden")}))}var a=document;document.addEventListener&&a.addEventListener("DOMContentLoaded",d)})();</script>
+</div><!-- /.error-footer -->
+
+
+    </div>
+</div>
+</body>
+</html>
