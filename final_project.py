@@ -33,7 +33,7 @@ SAMPLE_RATE = 16000
 N_MFCC = 13
 BATCH_SIZE = 64
 LEARNING_RATE = 1e-3
-NUM_EPOCHS = 20
+NUM_EPOCHS = 10  # 20
 CONV_KERNEL_SIZE = 5
 PADDING = 2
 HIDDEN_DIM = 512
@@ -41,7 +41,7 @@ MEL_KWARGS = {"n_fft": 400, "hop_length": 160, "n_mels": 23, "center": False,
               "normalized": False  # True
               }
 CHECKPOINT_INTERVAL = 3
-LOGS_DIR = "040924"
+LOGS_DIR = "140924"
 
 # TRAIN_SET_PATH = "../ex3/data/train"
 TRAIN_SET_PATH = "/cs/snapless/gabis/nive/speech/train"
@@ -233,7 +233,7 @@ class CTCWithLLM(nn.CTCLoss):
     def __init__(self, blank):
         super().__init__(blank)
         # self.pipeline = pipeline("text-generation", model=LLM_NAME)
-        self.llm = ChatOpenAI(model_name=LLM_NAME)
+        self.llm = ChatOpenAI(model_name=LLM_NAME) if "OPENAI_API_KEY" in os.environ else None
         self.num_failed_attempts = 0
         self.llm_performance_logs_path = f"/cs/snapless/gabis/nive/speech/Speech-Processing-Project/{LOGS_DIR}/llm_performance_logs_{time.strftime('%H_%M_%S')}.txt"
         with open(self.llm_performance_logs_path, "w") as f:
@@ -270,7 +270,10 @@ class CTCWithLLM(nn.CTCLoss):
                 input_lengths: torch.Tensor, target_lengths: torch.Tensor) -> torch.Tensor:
         for i, target in enumerate(targets):
             if (target < 0).any():
-                targets[i] = self.get_targets_by_llm(log_probs[:, i, :], target)
+                if self.llm is None:
+                    targets[i] *= (-1)
+                else:  # You should define 'OPENAI_API_KEY' in os.environ to use the LLM
+                    targets[i] = self.get_targets_by_llm(log_probs[:, i, :], target)
         return super().forward(log_probs, targets, input_lengths, target_lengths)
 
     def log_epoch_number(self, epoch_number):
