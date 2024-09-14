@@ -1,0 +1,57 @@
+ 22:41:03
+    NUM_EPOCHS = 10
+    NUM_CLEAN_EPOCHS = 5
+    DONT_USE_LABELS_RATIO = 2
+    LLM_NAME = "gpt-3.5-turbo-0125"
+    LLM_PROMPT = "My Speech-to-Text model is in the middle of training, and predicted the following text for a recording of a digit name: '{decoded_output}'. Which digit name is the most likely the true label of this recording? Reply with only one word out of the following: zero, one, two, three, four, five, six, seven, eight, nine (remember to only output one word out of them)."
+    
+
+    Finished Epoch 1 out of 10
+Mean CTC loss: 16.659132829904557
+Accuracy over validation set: 0.684
+Exact-match accuracy over validation set: 0.051
+Finished Epoch 2 out of 10
+Mean CTC loss: 2.441355751156807
+Accuracy over validation set: 0.785
+Exact-match accuracy over validation set: 0.09
+Finished Epoch 3 out of 10
+Mean CTC loss: 1.856221706867218
+Accuracy over validation set: 0.878
+Exact-match accuracy over validation set: 0.096
+Finished Epoch 4 out of 10
+Mean CTC loss: 1.6659494268894195
+Accuracy over validation set: 0.843
+Exact-match accuracy over validation set: 0.21
+Finished Epoch 5 out of 10
+Mean CTC loss: 1.375735878944397
+Accuracy over validation set: 0.862
+Exact-match accuracy over validation set: 0.195
+Finished Epoch 6 out of 10
+Mean CTC loss: 1.140978720486164
+Accuracy over validation set: 0.884
+Exact-match accuracy over validation set: 0.219
+Rate of failed LLM attempts: (random choice instead) 0.0
+Finished Epoch 7 out of 10
+Mean CTC loss: 1.0359361779689789
+Accuracy over validation set: 0.869
+Exact-match accuracy over validation set: 0.195
+Rate of failed LLM attempts: (random choice instead) 0.0
+Finished Epoch 8 out of 10
+Mean CTC loss: 0.9668978124856948
+Accuracy over validation set: 0.898
+Exact-match accuracy over validation set: 0.173
+Rate of failed LLM attempts: (random choice instead) 0.0
+Finished Epoch 9 out of 10
+Mean CTC loss: 0.9352277919650078
+Accuracy over validation set: 0.895
+Exact-match accuracy over validation set: 0.275
+Rate of failed LLM attempts: (random choice instead) 0.0
+Finished Epoch 10 out of 10
+Mean CTC loss: 0.9026938739418984
+Accuracy over validation set: 0.886
+Exact-match accuracy over validation set: 0.231
+Rate of failed LLM attempts: (random choice instead) 0.0
+Finished training at 22:56:06
+Final accuracy: 0.886
+Final exact-match accuracy: 0.193
+LLM performance logs path: /cs/snapless/gabis/nive/speech/Speech-Processing-Project/140924/llm_performance_logs_22_41_03.txt
