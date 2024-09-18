@@ -33,7 +33,7 @@ SAMPLE_RATE = 16000
 N_MFCC = 13
 BATCH_SIZE = 64
 LEARNING_RATE = 1e-3
-NUM_EPOCHS = 10  # 20
+NUM_EPOCHS = 11  # 20
 CONV_KERNEL_SIZE = 5
 PADDING = 2
 HIDDEN_DIM = 512
@@ -41,7 +41,7 @@ MEL_KWARGS = {"n_fft": 400, "hop_length": 160, "n_mels": 23, "center": False,
               "normalized": False  # True
               }
 CHECKPOINT_INTERVAL = 3
-LOGS_DIR = "140924"
+LOGS_DIR = "180924alldata"
 
 # TRAIN_SET_PATH = "../ex3/data/train"
 TRAIN_SET_PATH = "/cs/snapless/gabis/nive/speech/train"
@@ -65,6 +65,9 @@ LLM_PROMPT = "My Speech-to-Text model is in the middle of training, and predicte
              "most likely the true label of this recording? Reply with only one word out of the " \
              "following: zero, one, two, three, four, five, six, seven, eight, nine (remember " \
              "to only output one word out of them)."
+
+# use boolean flag to only run with the half "tagged" data with no LLM help
+REFERENCE_RUN_WITH_HALF_DATA = False
 
 
 class DigitDataset(Dataset):
@@ -320,7 +323,7 @@ def main():
         aggregated_loss = 0
         for mfccs, labels, input_lengths, target_lengths in train_loader:
             labels[::DONT_USE_LABELS_RATIO] *= -1
-            if epoch < NUM_CLEAN_EPOCHS:
+            if epoch < NUM_CLEAN_EPOCHS or REFERENCE_RUN_WITH_HALF_DATA:
                 samples_to_keep = (labels > 0)[:, 0]
                 mfccs = mfccs[samples_to_keep]
                 labels = labels[samples_to_keep]

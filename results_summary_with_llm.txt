@@ -1,0 +1,76 @@
+### WITH LLM:
+
+Starts epoch #1 at 22:26:36
+Finished Epoch 1 out of 20
+Mean CTC loss: 16.625162234306334
+Accuracy over validation set: 0.668
+Exact-match accuracy over validation set: 0.03
+
+Starts epoch #2 at 22:31:30
+Finished Epoch 2 out of 20
+Mean CTC loss: 2.4111911976337432
+Accuracy over validation set: 0.767
+Exact-match accuracy over validation set: 0.051
+
+Starts epoch #3 at 22:32:58
+Finished Epoch 3 out of 20
+Mean CTC loss: 1.947280045747757
+Accuracy over validation set: 0.878
+Exact-match accuracy over validation set: 0.096
+
+Starts epoch #4 at 22:33:46
+Finished Epoch 4 out of 20
+Mean CTC loss: 1.6977049827575683
+Accuracy over validation set: 0.831
+Exact-match accuracy over validation set: 0.188
+
+Starts epoch #5 at 22:34:28
+Finished Epoch 5 out of 20
+Mean CTC loss: 1.329208879172802
+Accuracy over validation set: 0.87
+Exact-match accuracy over validation set: 0.196
+
+Starts epoch #6 at 22:35:07
+Finished Epoch 6 out of 20
+Mean CTC loss: 1.2781013444066047
+Accuracy over validation set: 0.84
+Exact-match accuracy over validation set: 0.2
+Rate of failed LLM attempts: (random choice instead) 0.0005469604625722769
+
+Starts epoch #7 at 23:30:36
+Finished Epoch 7 out of 20
+Mean CTC loss: 1.1112787628173828
+Accuracy over validation set: 0.81
+Exact-match accuracy over validation set: 0.108
+Rate of failed LLM attempts: (random choice instead) 0.0006250976715111736
+
+Starts epoch #8 at 06:46:42
+Finished Epoch 8 out of 20
+Mean CTC loss: 1.0334125077724456
+Accuracy over validation set: 0.824
+Exact-match accuracy over validation set: 0.11
+Rate of failed LLM attempts: (random choice instead) 0.0006250976715111736
+
+Starts epoch #9 at 22:08:06
+Finished Epoch 9 out of 20
+Mean CTC loss: 0.9559765455126762
+Accuracy over validation set: 0.845
+Exact-match accuracy over validation set: 0.292
+Rate of failed LLM attempts: (random choice instead) 0.0006250976715111736
+
+Starts epoch #10 at 13:29:38
+Finished Epoch 10 out of 20
+Mean CTC loss: 0.9054318743944169
+Accuracy over validation set: 0.859
+Exact-match accuracy over validation set: 0.304
+Rate of failed LLM attempts: (random choice instead) 0.0003906860446944835
+
+Starts epoch #11 at 04:51:10
+Finished Epoch 11 out of 20
+Mean CTC loss: 0.8886605873703957
+Accuracy over validation set: 0.858
+Exact-match accuracy over validation set: 0.306
+Rate of failed LLM attempts: (random choice instead) 0.0003125488357555868
+
+Starts epoch #12 at 20:12:36
+
