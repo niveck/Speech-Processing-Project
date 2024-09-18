@@ -1,0 +1,69 @@
+### WITHOUT LLM
+
+Starts epoch #1 at 22:41:03
+Finished Epoch 1 out of 10
+Mean CTC loss: 16.659132829904557
+Accuracy over validation set: 0.684
+Exact-match accuracy over validation set: 0.051
+
+Starts epoch #2 at 22:48:39
+Finished Epoch 2 out of 10
+Mean CTC loss: 2.441355751156807
+Accuracy over validation set: 0.785
+Exact-match accuracy over validation set: 0.09
+
+Starts epoch #3 at 22:50:37
+Finished Epoch 3 out of 10
+Mean CTC loss: 1.856221706867218
+Accuracy over validation set: 0.878
+Exact-match accuracy over validation set: 0.096
+
+Starts epoch #4 at 22:51:48
+Finished Epoch 4 out of 10
+Mean CTC loss: 1.6659494268894195
+Accuracy over validation set: 0.843
+Exact-match accuracy over validation set: 0.21
+
+Starts epoch #5 at 22:52:34
+Finished Epoch 5 out of 10
+Mean CTC loss: 1.375735878944397
+Accuracy over validation set: 0.862
+Exact-match accuracy over validation set: 0.195
+
+Starts epoch #6 at 22:53:15
+Finished Epoch 6 out of 10
+Mean CTC loss: 1.140978720486164
+Accuracy over validation set: 0.884
+Exact-match accuracy over validation set: 0.219
+Rate of failed LLM attempts: (random choice instead) 0.0
+
+Starts epoch #7 at 22:53:47
+Finished Epoch 7 out of 10
+Mean CTC loss: 1.0359361779689789
+Accuracy over validation set: 0.869
+Exact-match accuracy over validation set: 0.195
+Rate of failed LLM attempts: (random choice instead) 0.0
+
+Starts epoch #8 at 22:54:15
+Finished Epoch 8 out of 10
+Mean CTC loss: 0.9668978124856948
+Accuracy over validation set: 0.898
+Exact-match accuracy over validation set: 0.173
+Rate of failed LLM attempts: (random choice instead) 0.0
+
+Starts epoch #9 at 22:54:39
+Finished Epoch 9 out of 10
+Mean CTC loss: 0.9352277919650078
+Accuracy over validation set: 0.895
+Exact-match accuracy over validation set: 0.275
+Rate of failed LLM attempts: (random choice instead) 0.0
+
+Starts epoch #10 at 22:55:03
+Finished Epoch 10 out of 10
+Mean CTC loss: 0.9026938739418984
+Accuracy over validation set: 0.886
+Exact-match accuracy over validation set: 0.231
+Rate of failed LLM attempts: (random choice instead) 0.0
+
+Final accuracy: 0.886
+Final exact-match accuracy: 0.193

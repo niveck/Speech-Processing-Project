@@ -41,7 +41,7 @@ MEL_KWARGS = {"n_fft": 400, "hop_length": 160, "n_mels": 23, "center": False,
               "normalized": False  # True
               }
 CHECKPOINT_INTERVAL = 3
-LOGS_DIR = "180924alldata"
+LOGS_DIR = "180924halfdata"
 
 # TRAIN_SET_PATH = "../ex3/data/train"
 TRAIN_SET_PATH = "/cs/snapless/gabis/nive/speech/train"
@@ -67,7 +67,7 @@ LLM_PROMPT = "My Speech-to-Text model is in the middle of training, and predicte
              "to only output one word out of them)."
 
 # use boolean flag to only run with the half "tagged" data with no LLM help
-REFERENCE_RUN_WITH_HALF_DATA = False
+REFERENCE_RUN_WITH_HALF_DATA = True
 
 
 class DigitDataset(Dataset):

@@ -3,9 +3,9 @@
 #SBATCH -c2
 #SBATCH --time=2:0:0
 #SBATCH --gres=gpu:1,vmem:32g
-#SBATCH --error=180924alldata/error_log_job%A.txt
-#SBATCH --output=180924alldata/output_log_job%A.txt
-#SBATCH --job-name=ctc_llm_training_180924alldata
+#SBATCH --error=180924halfdata/error_log_job%A.txt
+#SBATCH --output=180924halfdata/output_log_job%A.txt
+#SBATCH --job-name=ctc_llm_training_180924halfdata
 #SBATCH --mail-user=niv.eckhaus@mail.huji.ac.il
 #SBATCH --mail-type=ALL
 
