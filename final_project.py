@@ -345,7 +345,7 @@ def main():
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
             }
-            torch.save(checkpoint, f"checkpoint_epoch_{epoch + 1}.pth.tar")
+            torch.save(checkpoint, f"{LOGS_DIR}/checkpoint_epoch_{epoch + 1}.pth.tar")
 
         # validating
         with torch.inference_mode():
