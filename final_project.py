@@ -41,7 +41,7 @@ MEL_KWARGS = {"n_fft": 400, "hop_length": 160, "n_mels": 23, "center": False,
               "normalized": False  # True
               }
 CHECKPOINT_INTERVAL = 3
-LOGS_DIR = "180924halfdata"
+LOGS_DIR = "results/180924halfdata"
 
 # TRAIN_SET_PATH = "../ex3/data/train"
 TRAIN_SET_PATH = "/cs/snapless/gabis/nive/speech/train"

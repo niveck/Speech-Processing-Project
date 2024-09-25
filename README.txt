@@ -1,1 +1,1 @@
-Init of our project
+Repository for our final project in the Introduction to Speech and Audio Processing course in the Hebrew University of Jerusalem, taught by Dr. Yossi Adi in 2024.
